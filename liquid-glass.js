@@ -23,12 +23,9 @@ class LiquidGlassFilter {
     static globalListenersAttached = false;
 
     static prefersNativeBackdrop() {
-        const ua = navigator.userAgent;
-        const isFirefox = ua.includes("Firefox/");
-        const isSafari = ua.includes("Safari/") && !ua.includes("Chrome/") && !ua.includes("CriOS/") && !ua.includes("Edg/");
-        const isChromium = (ua.includes("Chrome/") || ua.includes("CriOS/") || ua.includes("Edg/")) && !ua.includes("OPR/");
-
-        return isChromium && !isFirefox && !isSafari && CSS.supports("backdrop-filter", "blur(1px)");
+        // Default every browser to the WebGL pipeline; keep native mode available
+        // only when a caller explicitly opts into renderMode: "native".
+        return false;
     }
 
     static attachGlobalListeners() {
