@@ -70,7 +70,6 @@ a {
     -webkit-backdrop-filter: none;
 }
 
-.native-liquid-glass .glass-panel,
 .webgl-liquid-glass .glass-panel {
     --glass-tint-background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 100%);
     --glass-specular-background:
@@ -88,7 +87,6 @@ a {
         inset 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
-.native-liquid-glass .glass-button,
 .webgl-liquid-glass .glass-button {
     --glass-tint-background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
     --glass-specular-background:
@@ -101,7 +99,6 @@ a {
     border-top-color: rgba(255, 255, 255, 0.9);
 }
 
-.native-liquid-glass .glass-button:hover,
 .webgl-liquid-glass .glass-button:hover {
     --glass-tint-background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 100%);
     box-shadow:
@@ -109,7 +106,6 @@ a {
         inset 0 1px 1px rgba(255, 255, 255, 1);
 }
 
-.native-liquid-glass .btn-primary,
 .webgl-liquid-glass .btn-primary {
     --glass-tint-background: linear-gradient(135deg, rgba(95, 54, 54, 0.6) 0%, rgba(69, 36, 36, 0.8) 100%);
     --glass-specular-background:
@@ -117,12 +113,10 @@ a {
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 46%);
 }
 
-.native-liquid-glass .btn-primary:hover,
 .webgl-liquid-glass .btn-primary:hover {
     --glass-tint-background: linear-gradient(135deg, rgba(95, 54, 54, 0.8) 0%, rgba(69, 36, 36, 0.9) 100%);
 }
 
-.native-liquid-glass .btn-add-cart,
 .webgl-liquid-glass .btn-add-cart {
     --glass-tint-background: linear-gradient(135deg, rgba(26, 26, 26, 0.6) 0%, rgba(26, 26, 26, 0.8) 100%);
     --glass-specular-background:
@@ -130,12 +124,10 @@ a {
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 46%);
 }
 
-.native-liquid-glass .btn-add-cart:hover,
 .webgl-liquid-glass .btn-add-cart:hover {
     --glass-tint-background: linear-gradient(135deg, rgba(51, 51, 51, 0.7) 0%, rgba(51, 51, 51, 0.9) 100%);
 }
 
-.native-liquid-glass .product-card:hover,
 .webgl-liquid-glass .product-card:hover {
     box-shadow: 0 25px 45px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }

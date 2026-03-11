@@ -113,27 +113,21 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize Physical Liquid Glass Filters (from liquid-glass.js)
-            const useNativeGlass = LiquidGlassFilter.prefersNativeBackdrop();
-            document.documentElement.classList.toggle('native-liquid-glass', useNativeGlass);
-            document.documentElement.classList.toggle('webgl-liquid-glass', !useNativeGlass);
+            document.documentElement.classList.add('webgl-liquid-glass');
             const panels = document.querySelectorAll('.glass-panel');
             panels.forEach(panel => {
                 const isButton = panel.classList.contains('glass-button');
                 
                 new LiquidGlassFilter(panel, {
-                    renderMode: useNativeGlass ? 'native' : 'webgl',
                     surfaceType: isButton ? 'lip' : 'convex_squircle', 
-                    bezelWidth: useNativeGlass ? (isButton ? 12 : 36) : (isButton ? 11 : 34),
-                    glassThickness: useNativeGlass ? (isButton ? 20 : 60) : (isButton ? 18 : 54),
-                    refractionScale: useNativeGlass ? (isButton ? 0.6 : 1.0) : (isButton ? 0.5 : 0.88),
-                    specularOpacity: useNativeGlass ? (isButton ? 1.2 : 0.8) : (isButton ? 0.96 : 0.7),
-                    blur: useNativeGlass ? (isButton ? 0.5 : 1.5) : (isButton ? 0.24 : 0.72),
-                    cssBlur: isButton ? 11 : 15,
-                    nativeBackdropBlur: useNativeGlass ? 0 : (isButton ? 8 : 10),
+                    bezelWidth: isButton ? 11 : 34,
+                    glassThickness: isButton ? 18 : 54,
+                    refractionScale: isButton ? 0.5 : 0.88,
+                    specularOpacity: isButton ? 0.96 : 0.7,
                     canvasBlur: isButton ? 1.25 : 2.2,
-                    saturate: useNativeGlass ? 1.2 : (isButton ? 1.14 : 1.22),
-                    brightness: useNativeGlass ? 1 : (isButton ? 1.05 : 1.08),
-                    contrast: useNativeGlass ? 1 : (isButton ? 1.03 : 1.06),
+                    saturate: isButton ? 1.14 : 1.22,
+                    brightness: isButton ? 1.05 : 1.08,
+                    contrast: isButton ? 1.03 : 1.06,
                     edgeRadius: isButton ? (panel.classList.contains('btn-favorite') ? 20 : 12) : 24
                 });
             });

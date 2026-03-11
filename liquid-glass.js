@@ -1,7 +1,6 @@
 /**
- * Liquid Glass Physics Pipeline
- * Chrome/Edge keep the native backdrop-filter path.
- * Firefox/Safari use a WebGL canvas fallback fed by a cloned source scene.
+ * Liquid Glass Physics Pipeline.
+ * All browsers use the WebGL canvas path fed by a cloned source scene.
  */
 
 const MathUtils = {
@@ -21,12 +20,6 @@ class LiquidGlassFilter {
     static imageCache = new Map();
     static syncRaf = null;
     static globalListenersAttached = false;
-
-    static prefersNativeBackdrop() {
-        // Default every browser to the WebGL pipeline; keep native mode available
-        // only when a caller explicitly opts into renderMode: "native".
-        return false;
-    }
 
     static attachGlobalListeners() {
         if (this.globalListenersAttached) {
@@ -222,7 +215,7 @@ class LiquidGlassFilter {
     constructor(element, options = {}) {
         this.element = element;
         this.sourceSelector = options.sourceSelector || element.dataset.glassSource || "";
-        this.mode = options.renderMode && options.renderMode !== "auto" ? options.renderMode : (LiquidGlassFilter.prefersNativeBackdrop() ? "native" : "webgl");
+        this.mode = "webgl";
         this.options = {
             surfaceType: options.surfaceType || "convex_squircle",
             bezelWidth: options.bezelWidth || 30,
@@ -230,9 +223,6 @@ class LiquidGlassFilter {
             refractiveIndex: options.refractiveIndex || 1.5,
             refractionScale: options.refractionScale || 1.1,
             specularOpacity: options.specularOpacity || 0.6,
-            blur: options.blur || 0.5,
-            cssBlur: options.cssBlur || 12,
-            nativeBackdropBlur: options.nativeBackdropBlur || 10,
             canvasBlur: options.canvasBlur || 1.1,
             saturate: options.saturate || 1.14,
             brightness: options.brightness || 1.1,
@@ -242,36 +232,27 @@ class LiquidGlassFilter {
             ...options
         };
 
-        this.filterId = "liquid-glass-filter-" + Math.random().toString(36).slice(2, 11);
         this.buildRaf = null;
         this.renderRaf = null;
         this.temporarySyncRaf = null;
 
         try {
-            if (this.mode === "webgl") {
-                this.sourceElement = this.resolveSourceElement();
-                if (!this.sourceElement) {
-                    return;
-                }
+            this.sourceElement = this.resolveSourceElement();
+            if (!this.sourceElement) {
+                return;
             }
 
-            this.setupSvgContainer();
-
-            if (this.mode === "webgl") {
-                this.setupLayers();
-                this.setupWebGL();
-            }
+            this.setupLayers();
+            this.setupWebGL();
 
             this.element._liquidGlassInstance = this;
             LiquidGlassFilter.instances.add(this);
             LiquidGlassFilter.attachGlobalListeners();
 
-            this.buildEffect();
+            this.buildWebGLAssets();
+            this.renderWebGL();
             this.setupObservers();
-
-            if (this.mode === "webgl") {
-                this.setupTransitionSync();
-            }
+            this.setupTransitionSync();
         } catch (error) {
             console.error("Liquid glass initialization failed.", error);
             this.disableEnhancement();
@@ -307,21 +288,6 @@ class LiquidGlassFilter {
 
         const globalMatch = document.querySelector(selector);
         return globalMatch && globalMatch !== this.element ? globalMatch : null;
-    }
-
-    setupSvgContainer() {
-        if (!document.getElementById("liquid-glass-svg-container")) {
-            const container = document.createElement("div");
-            container.id = "liquid-glass-svg-container";
-            container.style.position = "absolute";
-            container.style.width = "0";
-            container.style.height = "0";
-            container.style.overflow = "hidden";
-            container.style.pointerEvents = "none";
-            document.body.appendChild(container);
-        }
-
-        this.svgContainer = document.getElementById("liquid-glass-svg-container");
     }
 
     setupLayers() {
@@ -531,19 +497,16 @@ class LiquidGlassFilter {
             entries.forEach((entry) => {
                 if (entry.target === this.element) {
                     this.scheduleBuild();
-                } else if (this.mode === "webgl") {
+                } else {
                     this.scheduleRender();
                 }
             });
         });
 
         this.resizeObserver.observe(this.element);
+        this.resizeObserver.observe(this.sourceElement);
 
-        if (this.mode === "webgl" && this.sourceElement) {
-            this.resizeObserver.observe(this.sourceElement);
-        }
-
-        if (this.mode === "webgl" && this.sourceElement instanceof HTMLImageElement) {
+        if (this.sourceElement instanceof HTMLImageElement) {
             if (this.sourceElement.complete) {
                 this.scheduleRender();
             } else {
@@ -569,9 +532,7 @@ class LiquidGlassFilter {
     }
 
     handleViewportChange() {
-        if (this.mode === "webgl") {
-            this.scheduleRender();
-        }
+        this.scheduleRender();
     }
 
     startTemporarySync(duration = 700) {
@@ -602,12 +563,13 @@ class LiquidGlassFilter {
 
         this.buildRaf = window.requestAnimationFrame(() => {
             this.buildRaf = null;
-            this.buildEffect();
+            this.buildWebGLAssets();
+            this.renderWebGL();
         });
     }
 
     scheduleRender() {
-        if (this.mode !== "webgl" || this.renderRaf) {
+        if (this.renderRaf) {
             return;
         }
 
@@ -623,56 +585,6 @@ class LiquidGlassFilter {
             width: Math.max(10, Math.round(rect.width)),
             height: Math.max(10, Math.round(rect.height))
         };
-    }
-
-    buildEffect() {
-        if (this.mode === "native") {
-            this.buildNativeFilter();
-            return;
-        }
-
-        this.buildWebGLAssets();
-        this.renderWebGL();
-    }
-
-    buildNativeFilter() {
-        const { width, height } = this.measureElement();
-        if (width <= 10 && height <= 10) {
-            return;
-        }
-
-        const precomputed1D = this.calculateDisplacementMap1D();
-        const displacementCanvas = this.calculateDisplacementCanvas(width, height, precomputed1D);
-        const specularCanvas = this.calculateSpecularCanvas(width, height);
-        const svgContent = `
-            <svg id="${this.filterId}-svg" width="0" height="0">
-                <defs>
-                    <filter id="${this.filterId}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="${this.options.blur}" result="blurred" />
-                        <feImage href="${displacementCanvas.toDataURL()}" x="0" y="0" width="${width}" height="${height}" result="displacement_map" preserveAspectRatio="none" />
-                        <feDisplacementMap in="blurred" in2="displacement_map" scale="${this._maxDisplacement}" xChannelSelector="R" yChannelSelector="G" result="displaced" />
-                        <feColorMatrix in="displaced" type="saturate" values="1.2" result="displaced_saturated" />
-                        <feImage href="${specularCanvas.toDataURL()}" x="0" y="0" width="${width}" height="${height}" result="specular_layer" preserveAspectRatio="none" />
-                        <feComponentTransfer in="specular_layer" result="specular_faded">
-                            <feFuncA type="linear" slope="${this.options.specularOpacity}" />
-                        </feComponentTransfer>
-                        <feBlend in="specular_faded" in2="displaced_saturated" mode="screen" />
-                    </filter>
-                </defs>
-            </svg>
-        `;
-
-        const existingSvg = document.getElementById(`${this.filterId}-svg`);
-        if (existingSvg) {
-            existingSvg.remove();
-        }
-
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = svgContent.trim();
-        this.svgContainer.appendChild(wrapper.firstChild);
-
-        this.element.style.backdropFilter = `url(#${this.filterId})`;
-        this.element.style.webkitBackdropFilter = this.element.style.backdropFilter;
     }
 
     buildWebGLAssets() {
@@ -1063,7 +975,7 @@ class LiquidGlassFilter {
             window.cancelAnimationFrame(this.temporarySyncRaf);
         }
 
-        if (this.mode === "webgl" && this.contentLayer && this.contentLayer.isConnected) {
+        if (this.contentLayer && this.contentLayer.isConnected) {
             const fragment = document.createDocumentFragment();
             while (this.contentLayer.firstChild) {
                 fragment.appendChild(this.contentLayer.firstChild);
@@ -1072,17 +984,8 @@ class LiquidGlassFilter {
             this.element.replaceChildren(fragment);
         }
 
-        if (this.filterId) {
-            const existingSvg = document.getElementById(`${this.filterId}-svg`);
-            if (existingSvg) {
-                existingSvg.remove();
-            }
-        }
-
         if (this.element) {
             this.element.classList.remove("glass-enhanced");
-            this.element.style.backdropFilter = "";
-            this.element.style.webkitBackdropFilter = "";
             delete this.element._liquidGlassInstance;
         }
     }
