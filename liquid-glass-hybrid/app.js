@@ -1,23 +1,52 @@
 document.addEventListener("DOMContentLoaded", () => {
     const activeEngine = LiquidGlassFilter.detectEngine();
     const panels = document.querySelectorAll(".glass-panel");
+    const glassProfiles = {
+        panel: {
+            surfaceType: "convex_squircle",
+            bezelWidth: 34,
+            glassThickness: 54,
+            refractionScale: 0.88,
+            specularOpacity: 0.7,
+            saturate: 1.22,
+            brightness: 1.08,
+            contrast: 1.06,
+            edgeRadius: 24,
+            blur: 0.4,
+            canvasBlur: 2.2
+        },
+        button: {
+            surfaceType: "lip",
+            bezelWidth: 11,
+            glassThickness: 18,
+            refractionScale: 0.5,
+            specularOpacity: 0.96,
+            saturate: 1.14,
+            brightness: 1.05,
+            contrast: 1.03,
+            edgeRadius: 12,
+            blur: 0.12,
+            canvasBlur: 1.25
+        }
+    };
 
     panels.forEach((panel) => {
         const isButton = panel.classList.contains("glass-button");
+        const profile = isButton ? glassProfiles.button : glassProfiles.panel;
 
         new LiquidGlassFilter(panel, {
             engine: "auto",
-            surfaceType: isButton ? "lip" : "convex_squircle",
-            bezelWidth: activeEngine === "svg" ? (isButton ? 12 : 48) : (isButton ? 11 : 34),
-            glassThickness: activeEngine === "svg" ? (isButton ? 20 : 120) : (isButton ? 18 : 54),
-            refractionScale: activeEngine === "svg" ? (isButton ? 0.6 : 1.8) : (isButton ? 0.5 : 0.88),
-            specularOpacity: activeEngine === "svg" ? (isButton ? 1.2 : 1.1) : (isButton ? 0.96 : 0.7),
-            blur: activeEngine === "svg" ? (isButton ? 0.12 : 0.4) : 0.4,
-            canvasBlur: activeEngine === "webgl" ? (isButton ? 1.25 : 2.2) : 0.8,
-            saturate: activeEngine === "webgl" ? (isButton ? 1.14 : 1.22) : 1.2,
-            brightness: activeEngine === "webgl" ? (isButton ? 1.05 : 1.08) : 1.04,
-            contrast: activeEngine === "webgl" ? (isButton ? 1.03 : 1.06) : 1.03,
-            edgeRadius: isButton ? (panel.classList.contains("btn-favorite") ? 20 : 12) : 24
+            surfaceType: profile.surfaceType,
+            bezelWidth: profile.bezelWidth,
+            glassThickness: profile.glassThickness,
+            refractionScale: profile.refractionScale,
+            specularOpacity: profile.specularOpacity,
+            blur: activeEngine === "svg" ? profile.blur : 0.4,
+            canvasBlur: activeEngine === "webgl" ? profile.canvasBlur : 0.8,
+            saturate: profile.saturate,
+            brightness: profile.brightness,
+            contrast: profile.contrast,
+            edgeRadius: isButton ? (panel.classList.contains("btn-favorite") ? 20 : profile.edgeRadius) : profile.edgeRadius
         });
     });
 

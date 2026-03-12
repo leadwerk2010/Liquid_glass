@@ -272,6 +272,10 @@ class SvgGlassRenderer {
         );
         const blur = options.blur ?? 0.4;
         const saturate = options.saturate ?? 1.2;
+        const brightness = options.brightness ?? 1.08;
+        const contrast = options.contrast ?? 1.06;
+        const toneSlope = brightness * contrast;
+        const toneIntercept = brightness * (0.5 - 0.5 * contrast);
 
         if (this.svgNode) {
             this.svgNode.remove();
@@ -287,11 +291,17 @@ class SvgGlassRenderer {
                         <feImage href="${displacementUrl}" x="0" y="0" width="${width}" height="${height}" result="displacement_map" preserveAspectRatio="none"></feImage>
                         <feDisplacementMap in="blurred" in2="displacement_map" scale="${options._maxDisplacement}" xChannelSelector="R" yChannelSelector="G" result="displaced"></feDisplacementMap>
                         <feColorMatrix in="displaced" type="saturate" values="${saturate}" result="displaced_saturated"></feColorMatrix>
+                        <feComponentTransfer in="displaced_saturated" result="displaced_toned">
+                            <feFuncR type="linear" slope="${toneSlope}" intercept="${toneIntercept}"></feFuncR>
+                            <feFuncG type="linear" slope="${toneSlope}" intercept="${toneIntercept}"></feFuncG>
+                            <feFuncB type="linear" slope="${toneSlope}" intercept="${toneIntercept}"></feFuncB>
+                            <feFuncA type="identity"></feFuncA>
+                        </feComponentTransfer>
                         <feImage href="${specularUrl}" x="0" y="0" width="${width}" height="${height}" result="specular_layer" preserveAspectRatio="none"></feImage>
                         <feComponentTransfer in="specular_layer" result="specular_faded">
                             <feFuncA type="linear" slope="${options.specularOpacity}"></feFuncA>
                         </feComponentTransfer>
-                        <feBlend in="specular_faded" in2="displaced_saturated" mode="screen"></feBlend>
+                        <feBlend in="specular_faded" in2="displaced_toned" mode="screen"></feBlend>
                     </filter>
                 </defs>
             </svg>
@@ -1218,16 +1228,16 @@ class LiquidGlassFilter {
         this.options = {
             engine: "auto",
             surfaceType: "convex_squircle",
-            bezelWidth: 30,
-            glassThickness: 100,
+            bezelWidth: 34,
+            glassThickness: 54,
             refractiveIndex: 1.5,
-            refractionScale: 1.1,
-            specularOpacity: 0.6,
+            refractionScale: 0.88,
+            specularOpacity: 0.7,
             blur: 0.4,
-            canvasBlur: 1.1,
-            saturate: 1.14,
-            brightness: 1.1,
-            contrast: 1.02,
+            canvasBlur: 2.2,
+            saturate: 1.22,
+            brightness: 1.08,
+            contrast: 1.06,
             edgeRadius: 24,
             transitionSyncDuration: 700,
             ...options
